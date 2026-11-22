@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CampusFind — Lost & Found</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    /* MODIFIED: New color palette for the "Oceanic Blue" theme */
+    :root { --bg1:#0A192F; --bg2:#173A5E; --bg3:#0077B6; --bg4:#03254C; }
+
+    body{
+      font-family:'Inter',sans-serif;
+      /* MODIFIED: Updated background gradient to a deep blue ocean feel */
+      background:linear-gradient(-45deg,var(--bg1),var(--bg2),var(--bg3),var(--bg4));
+      background-size:400% 400%;
+      animation:gradientBG 20s ease infinite;
+      color:#f8fafc;
+      min-height:100vh;
+      position:relative;
+      overflow-x:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* MODIFIED: Particle effect is now a shimmering light/bubble effect */
+    body::before {
+      content:'';
+      position:fixed;
+      width:100%;
+      height:100%;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(144, 224, 239, .3), transparent),
+        radial-gradient(2px 2px at 60% 70%, rgba(0, 180, 216, .2), transparent),
+        radial-gradient(1px 1px at 50% 50%, rgba(144, 224, 239, .25), transparent),
+        radial-gradient(1px 1px at 80% 10%, rgba(0, 180, 216, .3), transparent),
+        radial-gradient(2px 2px at 90% 60%, rgba(144, 224, 239, .2), transparent),
+        radial-gradient(1px 1px at 33% 50%, rgba(0, 180, 216, .25), transparent);
+      background-size: 250% 250%;
+      animation: twinkle 12s ease-in-out infinite;
+      pointer-events:none;
+      z-index:1;
+    }
+    @keyframes twinkle { 0%,100%{opacity:.5; transform: scale(.95);} 50%{opacity:1; transform: scale(1.05);} }
+    @keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    #app { position:relative; z-index:2; flex:1; display:flex; flex-direction:column; }
+    .main-wrapper { flex:1; }
+    
+    /* MODIFIED: Footer styling to match the new theme */
+    .footer {
+      background: linear-gradient(135deg, rgba(10, 25, 47, .85), rgba(3, 37, 76, .75));
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0, 166, 251, .3);
+      box-shadow: 0 -10px 40px rgba(0,0,0,.3);
+      margin-top: 4rem;
+    }
+    
+    .footer-link {
+      transition: all 0.3s ease;
+      position: relative;
+      padding-bottom: 2px;
+    }
+    
+    /* MODIFIED: Footer link underline is a bright blue */
+    .footer-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #90E0EF, #00A6FB);
+      transition: width 0.3s ease;
+    }
+    
+    .footer-link:hover {
+      color: #90E0EF; /* light blue */
+      transform: translateY(-2px);
+    }
+    
+    .footer-link:hover::after {
+      width: 100%;
+    }
+    
+    /* MODIFIED: Social icons use the new blue palette */
+    .social-icon {
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(0, 166, 251, .1);
+      border: 1px solid rgba(0, 166, 251, .3);
+    }
+    
+    .social-icon:hover {
+      transform: translateY(-4px) scale(1.1);
+      background: rgba(0, 166, 251, .2);
+      box-shadow: 0 8px 20px rgba(0, 166, 251, .25);
+      border-color: rgba(0, 166, 251, .5);
+    }
+    
+    /* MODIFIED: Action cards use a blue gradient and highlights */
+    .action-card{ background:linear-gradient(135deg, rgba(10, 25, 47, .2), rgba(0, 119, 182, .1)); backdrop-filter:blur(10px); border:1px solid rgba(0, 166, 251, .2); transition:all .4s cubic-bezier(.2,.9,.2,1); border-radius:1.25rem; padding:2rem; cursor:pointer; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:.75rem; position:relative; overflow:hidden; }
+    .action-card::before{ content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:linear-gradient(45deg, transparent, rgba(144, 224, 239, .1), transparent); transform:rotate(45deg); transition:all .6s; }
+    .action-card:hover::before{ left:100%; }
+    .action-card:hover{ transform:translateY(-12px) scale(1.03); box-shadow:0 25px 50px rgba(10, 25, 47, .4), 0 0 60px rgba(0, 166, 251, .2); background:linear-gradient(135deg, rgba(10, 25, 47, .3), rgba(0, 119, 182, .15)); border-color:rgba(0, 166, 251, .4); }
+    
+    /* MODIFIED: Input fields focus with a blue color */
+    .input-field{ background:rgba(255,255,255,.04); border:1px solid rgba(0, 166, 251, .2); color:#fff; padding:.85rem; border-radius:.65rem; width:100%; transition:all .3s;}
+    .input-field:focus{ outline:none; border-color:rgba(0, 166, 251, .5); box-shadow:0 0 20px rgba(0, 166, 251, .2); background:rgba(255,255,255,.06); }
+    
+    /* MODIFIED: Item card hover shadow is now blue */
+    .item-card{ background:linear-gradient(135deg, rgba(17,24,39,.6), rgba(8,10,14,.5)); backdrop-filter:blur(10px); border-radius:1rem; padding:1.25rem; border-left:4px solid; transform-origin:center; transition:all .35s cubic-bezier(.2,.9,.2,1); border:1px solid rgba(0, 166, 251, .1); }
+    .item-card:hover{ transform:translateY(-8px) translateX(4px); box-shadow:0 20px 50px rgba(0,0,0,.5), -4px 0 20px rgba(0, 166, 251, .2); }
+    .muted{color:#8892b0}
+    .small{font-size:.9rem}
+    .hidden{display:none}
+    #notification-container{ position:fixed; top:1rem; right:1rem; z-index:100; width:320px; max-width:calc(100% - 2rem); }
+    .notification{ padding:.85rem 1.25rem; border-radius:.75rem; margin-bottom:.6rem; color:#fff; box-shadow:0 10px 40px rgba(0,0,0,.4); font-size:.95rem; animation:slideInRight .4s cubic-bezier(.2,.9,.2,1); border:1px solid rgba(255,255,255,.1); }
+    @keyframes slideInRight { from { transform:translateX(400px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+    .bg-success{background:linear-gradient(135deg,#16a34a,#15803d)} /* Unchanged */
+    .bg-error{background:linear-gradient(135deg,#ef4444,#dc2626)} /* Unchanged */
+    /* MODIFIED: Info notification is now a strong blue */
+    .bg-info{background:linear-gradient(135deg,#0077B6,#00507A)}
+    .badge{ display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .75rem; border-radius:999px; font-weight:700; font-size:.82rem; animation:badgePulse 2s ease-in-out infinite; }
+    @keyframes badgePulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+    .badge-lost{ background:linear-gradient(135deg, rgba(239,68,68,.15), rgba(220,38,38,.12)); color:#fca5a5; border:1px solid rgba(239,68,68,.3); box-shadow:0 0 20px rgba(239,68,68,.2); } /* Unchanged */
+    .badge-found{ background:linear-gradient(135deg, rgba(34,197,94,.15), rgba(22,163,74,.12)); color:#86efac; border:1px solid rgba(34,197,94,.3); box-shadow:0 0 20px rgba(34,197,94,.2); } /* Unchanged */
+    .logo-wrap{display:flex;align-items:center;gap:.75rem}
+    /* MODIFIED: Logo shadow and border are blue */
+    .logo-img{ width:48px; height:48px; border-radius:12px; box-shadow:0 8px 30px rgba(0, 166, 251, .3); transform-origin:center; animation:logoFloat 4s ease-in-out infinite; border:2px solid rgba(0, 166, 251, .3); }
+    @keyframes logoFloat{0%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-8px) rotate(3deg)} 100%{transform:translateY(0) rotate(-3deg)}}
+    .appear{ opacity:0; transform:translateY(20px) scale(.98); animation:appearIn .6s forwards cubic-bezier(.2,.9,.2,1); }
+    @keyframes appearIn{ to{opacity:1;transform:translateY(0) scale(1)} }
+    /* MODIFIED: Pulse animation is now a vibrant blue */
+    .pulse{ animation:pulse 2s infinite; }
+    @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(0, 166, 251,.7)} 70%{box-shadow:0 0 0 10px rgba(0, 166, 251,0)} 100%{box-shadow:0 0 0 0 rgba(0, 166, 251,0)} }
+    .hero { display:flex; align-items:center; justify-content:center; min-height:75vh; text-align:center; gap:1rem; padding:4rem 1rem; position:relative; overflow:hidden; }
+    /* MODIFIED: Hero orb glows are now shades of blue */
+    .hero::before, .hero::after { content:''; position:absolute; border-radius:50%; filter:blur(80px); opacity:.4; animation:orbFloat 15s ease-in-out infinite; }
+    .hero::before { width:400px; height:400px; background:radial-gradient(circle, rgba(0, 119, 182, .4), transparent); top:10%; left:-10%; animation-delay:-5s; }
+    .hero::after { width:500px; height:500px; background:radial-gradient(circle, rgba(0, 180, 216, .3), transparent); bottom:-15%; right:-15%; }
+    @keyframes orbFloat { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(50px,-50px) scale(1.1);} 66%{transform:translate(-30px,30px) scale(.9);} }
+    /* MODIFIED: Hero card background and shadows use deep blues */
+    .hero-card { background:linear-gradient(135deg, rgba(10, 25, 47, .1), rgba(0, 119, 182, .08)); backdrop-filter:blur(30px); border-radius:2rem; padding:3.5rem 3rem; max-width:960px; box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 100px rgba(0, 166, 251,.1), inset 0 1px 0 rgba(255,255,255,.1); border:1px solid rgba(0, 166, 251,.25); position:relative; z-index:2; animation:heroSlideUp 1s cubic-bezier(.2,.9,.2,1) forwards; opacity:0; }
+    .hero-card::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent); animation:cardShine 3s ease-in-out 1.5s infinite; }
+    @keyframes cardShine { 0%{left:-100%} 50%,100%{left:100%} }
+    @keyframes heroSlideUp { from{opacity:0; transform:translateY(60px) scale(.92);} to{opacity:1; transform:translateY(0) scale(1);} }
+    /* MODIFIED: Hero logo glows with shades of blue */
+    .hero-logo{ width:160px; height:160px; border-radius:24px; object-fit:cover; margin:0 auto 2rem; display:block; box-shadow:0 25px 70px rgba(0, 166, 251, .4),0 0 60px rgba(0, 180, 216, .3); animation:logoEntrance 1.2s cubic-bezier(.2,.9,.2,1) .3s forwards, logoGlow 3s ease-in-out 1.5s infinite, logoRotate 20s linear infinite; opacity:0; border:4px solid rgba(0, 166, 251, .4); position:relative; }
+    .hero-logo::after{ content:''; position:absolute; top:-8px; left:-8px; right:-8px; bottom:-8px; border-radius:24px; border:2px solid transparent; border-top-color:rgba(0, 166, 251, .6); border-right-color:rgba(0, 180, 216, .5); animation:logoRing 3s linear infinite; }
+    @keyframes logoRing{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
+    @keyframes logoEntrance{ from{opacity:0; transform:scale(.6) rotate(-15deg);} to{opacity:1; transform:scale(1) rotate(0deg);} }
+    @keyframes logoGlow { 0%,100%{box-shadow:0 25px 70px rgba(0, 166, 251, .4),0 0 60px rgba(0, 180, 216, .3);} 50%{box-shadow:0 30px 90px rgba(0, 166, 251, .6),0 0 80px rgba(0, 180, 216, .45);} }
+    @keyframes logoRotate { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(5deg);} }
+    /* MODIFIED: Get Started button is now a vibrant blue gradient */
+    .get-started { display:inline-flex; align-items:center; gap:.75rem; padding:1.1rem 2.25rem; border-radius:1rem; font-weight:900; font-size:1.15rem; background:linear-gradient(135deg, #00A6FB, #0077B6, #03254C); background-size:300% 300%; color:#fff; border:none; cursor:pointer; box-shadow:0 15px 50px rgba(0, 166, 251, .3),0 0 40px rgba(0, 119, 182, .25); transition:all .3s cubic-bezier(.2,.9,.2,1); position:relative; overflow:hidden; animation:buttonShine 4s ease-in-out infinite; border:2px solid rgba(255,255,255,.2); }
+    @keyframes buttonShine { 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
+    .get-started:hover{ transform:translateY(-6px) scale(1.08); box-shadow:0 30px 70px rgba(0, 166, 251, .4),0 0 60px rgba(0, 119, 182, .35); animation:buttonShine 2s ease-in-out infinite; }
+    /* MODIFIED: Emoji for the button */
+    .get-started::after{ content:'💧'; position:absolute; font-size:1.5rem; animation:sparkle 2s ease-in-out infinite; opacity:.7; }
+    @keyframes sparkle { 0%,100%{transform:translate(120%,-120%) scale(0); opacity:0;} 50%{transform:translate(120%,-120%) scale(1); opacity:.7;} }
+    /* MODIFIED: Tagline uses a bright blue text gradient and underline */
+    .tagline{ color:#fff; font-weight:900; letter-spacing:-.02em; animation:fadeInUp .7s cubic-bezier(.2,.9,.2,1) .5s forwards; opacity:0; background:linear-gradient(135deg, #fff, #CAF0F8, #90E0EF); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-shadow:0 0 40px rgba(144, 224, 239, .4); position:relative; }
+    .tagline::after{ content:''; position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:0; height:4px; background:linear-gradient(90deg, transparent, #90E0EF, transparent); animation:underlineGrow 1.2s cubic-bezier(.2,.9,.2,1) 1.2s forwards; border-radius:2px; }
+    @keyframes underlineGrow{ to{ width:200px; } }
+    .subtag{ color:rgba(203,213,225,.95); margin-top:1.25rem; margin-bottom:2rem; font-size:1.15rem; line-height:1.7; animation:fadeInUp .7s cubic-bezier(.2,.9,.2,1) .7s forwards; opacity:0; }
+    @keyframes fadeInUp{ from{opacity:0; transform:translateY(25px);} to{opacity:1; transform:translateY(0);} }
+    .feature-icon{ display:inline-block; animation:iconBounce 2.5s ease-in-out infinite; transition:transform .3s; }
+    .feature-icon:hover{ transform:scale(1.15) rotate(10deg); }
+    @keyframes iconBounce{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
+    .feature-icon:nth-child(2){ animation-delay:.3s; } .feature-icon:nth-child(3){ animation-delay:.6s; }
+    /* MODIFIED: Feature icon drop shadow is blue */
+    .feature-icon div:first-child{ font-size:3rem; filter:drop-shadow(0 5px 15px rgba(0, 166, 251, .4)); animation:iconRotate 4s ease-in-out infinite; }
+    @keyframes iconRotate{ 0%,100%{transform:rotate(0deg);} 25%{transform:rotate(-10deg);} 75%{transform:rotate(10deg);} }
+    .stats-item{ animation:statsAppear .8s cubic-bezier(.2,.9,.2,1) forwards; opacity:0; }
+    .stats-item:nth-child(1){ animation-delay:1.3s; } .stats-item:nth-child(2){ animation-delay:1.5s; }
+    @keyframes statsAppear{ from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+    
+    /* MODIFIED: Image upload area border is blue */
+    .image-upload-area {
+      border: 2px solid rgba(0, 166, 251, .4);
+      border-radius: 0.75rem;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(255,255,255,.02);
+    }
+    .image-upload-area:hover {
+      border-color: rgba(0, 166, 251, .7);
+      background: rgba(0, 166, 251, .05);
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+    }
+    
+    .item-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .item-details.open {
+      max-height: 1000px;
+      transition: max-height 0.4s ease-in;
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .btn-delete {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+      background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* MODIFIED: Modal content uses the new dark blue background */
+    .modal-content {
+      background: linear-gradient(135deg, rgba(10, 25, 47, .95), rgba(3, 37, 76, .95));
+      border: 2px solid rgba(239,68,68,.4);
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @media (max-width:768px){ .grid-md-3{grid-template-columns:1fr} .grid-md-2{grid-template-columns:1fr} .logo-img{width:40px;height:40px} .hero-logo{width:120px;height:120px} .hero-card{padding:2.5rem 1.5rem} .feature-icon div:first-child{font-size:2.5rem} }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body>
+  <div id="notification-container"></div>
+
+  <div id="app" class="max-w-6xl mx-auto p-6">
+    <div class="main-wrapper">
+      <header class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+          <div class="logo-wrap">
+            <img class="logo-img" id="site-logo" src="" alt="CampusFind logo">
+            <div>
+              <h1 class="text-2xl font-extrabold">CampusFind</h1>
+              <div id="welcome-line" class="muted small">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div id="profile-area"></div>
+          <!-- MODIFIED: Changed to a theme-appropriate sky blue and added pulse animation -->
+          <button id="btn-dashboard" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold pulse hidden" data-action="dashboard">Home</button>
+        </div>
+      </header>
+
+      <main id="main-content"></main>
+    </div>
+
+    <footer id="app-footer" class="footer hidden">
+      <div class="max-w-6xl mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+          <div>
+            <div class="flex items-center gap-3 mb-4">
+              <img class="w-12 h-12 rounded-lg" id="footer-logo" src="" alt="CampusFind">
+              <h3 class="text-xl font-bold">CampusFind</h3>
+            </div>
+            <p class="text-sm text-blue-200/70 leading-relaxed">
+              Your lost and found management system for campus. Reuniting students and staff with their belongings quickly and securely.
+            </p>
+          </div>
+          
+          <div>
+            <h4 class="font-bold text-lg mb-4">Quick Links</h4>
+            <ul class="space-y-2">
+              <li><a href="#" data-action="dashboard" class="footer-link text-blue-200/70 hover:text-sky-300">Dashboard</a></li>
+              <li><a href="#" data-action="report-lost" class="footer-link text-blue-200/70 hover:text-sky-300">Report Lost</a></li>
+              <li><a href="#" data-action="report-found" class="footer-link text-blue-200/70 hover:text-sky-300">Report Found</a></li>
+              <li><a href="#" data-action="my-reports" class="footer-link text-blue-200/70 hover:text-sky-300">My Reports</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 class="font-bold text-lg mb-4">Legal</h4>
+            <ul class="space-y-2 mb-4">
+              <li><a href="#" data-action="open-privacy" class="footer-link text-blue-200/70 hover:text-sky-300">Privacy Policy</a></li>
+              <li><a href="#" data-action="open-terms" class="footer-link text-blue-200/70 hover:text-sky-300">Terms of Service</a></li>
+            </ul>
+            <div class="flex gap-3">
+              <a href="#" class="social-icon" title="Facebook">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </a>
+              <a href="#" class="social-icon" title="Twitter">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+              </a>
+              <a href="#" class="social-icon" title="Instagram">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="border-t border-blue-200/50 pt-6">
+          <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-blue-200/70 hover:text-sky-300">
+              © 2025 CampusFind. All rights reserved.
+            </p>
+            <p class="text-xs text-blue-200/70 hover:text-sky-300">
+              Made with 💙
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+
+  <div id="modal-root"></div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
+    updateProfile, updatePassword, sendPasswordResetEmail, fetchSignInMethodsForEmail
+  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+  import {
+    getFirestore, collection, query, where, onSnapshot, addDoc, doc,
+    updateDoc, serverTimestamp, orderBy, limit, setDoc, getDoc, getDocs, deleteDoc,
+    documentId
+  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+  const EMAILJS_PUBLIC_KEY = '1kRbxlpVR_T-63CY5';
+  const EMAILJS_SERVICE_ID = 'service_sprhuuz';
+  const EMAILJS_TEMPLATE_ID = 'template_wgnaz0p';
+  const EMAILJS_MATCH_TEMPLATE_ID = "template_ztit6y7";
+  const EMAILJS_EXTRA_PUBLIC_KEY = 'fWq6NHTgd7kULNX0w';
+  const EMAILJS_EXTRA_SERVICE_ID = 'service_vmldwtm';
+  const EMAILJS_NOTIFY_TEMPLATE_ID = 'template_flpetm9';
+  
+  const IMGBB_API_KEY = '057540bc64706b90b18241847ad15225';
+
+  if (window.emailjs && typeof window.emailjs.init === 'function') {
+    window.emailjs.init(EMAILJS_PUBLIC_KEY);
+  }
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC84EoSNb--OauTfgw2ygtNdiDxFjTKYf0",
+    authDomain: "campusfind-65652.firebaseapp.com",
+    projectId: "campusfind-65652",
+    storageBucket: "campusfind-65652.firebasestorage.app",
+    messagingSenderId: "406717996793",
+    appId: "1:406717996793:web:c53a6b6ff441caa5ef0c28",
+    measurementId: "G-40X5WY57H6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  
+  auth.useDeviceLanguage();
+  
+  await setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
+  let currentUser = null;
+  let currentUserName = "User";
+  let listeners = { all: null, messages: null, myItems: null, notifications: null };
+  let currentImageFile = null;
+  let unreadNotifications = 0;
+  let userClaimedItemIds = new Set(); 
+
+  const notifCt = document.getElementById('notification-container');
+  const btnDashboard = document.getElementById('btn-dashboard');
+  const siteLogo = document.getElementById('site-logo');
+  const profileArea = document.getElementById('profile-area');
+  const appFooter = document.getElementById('app-footer');
+  const footerLogo = document.getElementById('footer-logo');
+
+  siteLogo.src = "https://i.ibb.co/B2qQDb9T/logo-png.png"
+  footerLogo.src = "https://i.ibb.co/B2qQDb9T/logo-png.png"
+
+  function showNotification(message, type='info') {
+    const el = document.createElement('div');
+    el.className = 'notification ' + (type==='success' ? 'bg-success' : type==='error' ? 'bg-error' : 'bg-info');
+    el.innerText = message;
+    notifCt.appendChild(el);
+    setTimeout(()=> { el.style.opacity='0'; setTimeout(()=> el.remove(), 400); }, 3800);
+  }
+
+  function escapeHtml(s){
+    if(s===undefined||s===null) return '';
+    return String(s)
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'",'&#039;');
+  }
+
+  function safeUnsub(fn){ if(fn && typeof fn === 'function') try{ fn(); }catch(e){} }
+
+  // --- CHANGE: New function to clean up all listeners ---
+  function cleanupListeners() {
+    safeUnsub(listeners.all);
+    safeUnsub(listeners.messages);
+    safeUnsub(listeners.myItems);
+    safeUnsub(listeners.notifications);
+    listeners = { all: null, messages: null, myItems: null, notifications: null };
+  }
+
+  function setHeaderAuthVisible(visible) {
+    [btnDashboard].forEach(btn => {
+      if (!btn) return;
+      if (visible) btn.classList.remove('hidden');
+      else btn.classList.add('hidden');
+    });
+    
+    if (appFooter) {
+      if (visible) appFooter.classList.remove('hidden');
+      else appFooter.classList.add('hidden');
+    }
+    
+    if (visible) {
+      renderProfileArea();
+      setupNotificationListener();
+    } else {
+      if (profileArea) profileArea.innerHTML = '';
+      safeUnsub(listeners.notifications);
+    }
+  }
+
+  function setupNotificationListener() {
+    if (!currentUser) return;
+    safeUnsub(listeners.notifications);
+    
+    const q = query(
+      collection(db, 'notifications'),
+      where('recipientId', '==', currentUser.uid),
+      where('read', '==', false),
+      orderBy('timestamp', 'desc')
+    );
+    
+    listeners.notifications = onSnapshot(q, (snapshot) => {
+      unreadNotifications = snapshot.size;
+      renderProfileArea();
+    }, (error) => {
+      console.error('Notification listener error:', error);
+    });
+  }
+
+  function renderProfileArea(){
+    if(!currentUser) { profileArea.innerHTML=''; return; }
+    const email = escapeHtml(currentUser.email || '');
+    const initials = (currentUserName||'U').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+    const notifBadge = unreadNotifications > 0 ? `<span class="notif-badge">${unreadNotifications}</span>` : '';
+    
+    profileArea.innerHTML = `
+      <div class="relative inline-block text-left">
+        <button id="profile-btn" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800/40 hover:bg-gray-800/60 transition-all">
+          <div class="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-white font-bold relative">
+            ${initials}
+            ${notifBadge}
+          </div>
+          <div class="text-left hidden sm:block">
+            <div class="text-sm font-semibold">${escapeHtml(currentUserName)}</div>
+            <div class="text-xs muted">${email}</div>
+          </div>
+          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="profile-menu" class="hidden absolute right-0 mt-2 w-56 bg-gray-900/95 rounded-lg border border-gray-700 p-2 shadow-lg z-50 backdrop-blur-lg">
+          <button data-action="manage-account" class="w-full text-left px-3 py-2 rounded hover:bg-gray-800 transition-colors">⚙️ Manage your Account</button>
+          <button data-action="view-notifications" class="w-full text-left px-3 py-2 rounded hover:bg-gray-800 transition-colors relative">
+            🔔 Notifications
+            ${unreadNotifications > 0 ? `<span class="ml-2 px-2 py-0.5 text-xs bg-red-500 rounded-full">${unreadNotifications}</span>` : ''}
+          </button>
+          <div class="border-t border-gray-700 my-2"></div>
+          <button data-action="signout-all" class="w-full text-left px-3 py-2 rounded hover:bg-gray-800 text-red-400 transition-colors">🚪 Sign out all accounts</button>
+          <div class="border-t border-gray-700 my-2"></div>
+          <div class="px-3 py-2 small muted text-center">
+            <button data-action="open-privacy" class="underline text-xs hover:text-indigo-400">Privacy Policy</button> ·
+            <button data-action="open-terms" class="underline text-xs hover:text-indigo-400">Terms</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const btn = profileArea.querySelector('#profile-btn');
+    const menu = profileArea.querySelector('#profile-menu');
+    btn.onclick = (ev) => { ev.stopPropagation(); menu.classList.toggle('hidden'); };
+    document.addEventListener('click', ()=> { if(menu) menu.classList.add('hidden'); });
+  }
+
+  function renderLandingPage() {
+    setHeaderAuthVisible(false);
+    document.getElementById('main-content').innerHTML = `
+      <section class="hero">
+        <div class="hero-card">
+          <img src="${escapeHtml(siteLogo.src)}" alt="CampusFind Logo" class="hero-logo" />
+          <h2 class="text-6xl font-extrabold tagline mb-3">CampusFind</h2>
+          <p class="subtag">Lost And Found Management System For Campus.<br></p>
+          
+          <div class="flex justify-center gap-8 my-8" style="animation: fadeInUp .7s cubic-bezier(.2,.9,.2,1) .9s forwards; opacity:0;">
+            <div class="text-center feature-icon">
+              <div class="mb-2">🕵️</div>
+              <div class="text-xs text-indigo-300 font-bold tracking-wide">SEARCH</div>
+            </div>
+            <div class="text-center feature-icon">
+              <div class="mb-2">📢</div>
+              <div class="text-xs text-purple-300 font-bold tracking-wide">REPORT</div>
+            </div>
+            <div class="text-center feature-icon">
+              <div class="mb-2">🤝</div>
+              <div class="text-xs text-pink-300 font-bold tracking-wide">REUNITE</div>
+            </div>
+          </div>
+
+          <div class="flex justify-center gap-3 mt-8" style="animation: fadeInUp .7s cubic-bezier(.2,.9,.2,1) 1.1s forwards; opacity:0;">
+            <button class="get-started" data-action="get-started">
+              <span>Get Started</span>
+              <span style="font-size:1.3rem;">→</span>
+            </button>
+          </div>
+
+          <div class="mt-8 flex justify-center gap-8 text-center" style="animation: fadeInUp .7s cubic-bezier(.2,.9,.2,1) 1.3s forwards; opacity:0;">
+            <div class="stats-item">
+              <div class="text-2xl font-black text-indigo-300">Fast</div>
+              <div class="text-xs text-gray-400 mt-1">Quick Recovery</div>
+            </div>
+            <div class="stats-item">
+              <div class="text-2xl font-black text-purple-300">Safe</div>
+              <div class="text-xs text-gray-400 mt-1">Secure Platform</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  async function fetchUserClaims() {
+    if (!currentUser) {
+        userClaimedItemIds = new Set();
+        return;
+    }
+    try {
+        const q = query(collection(db, 'claims'), where('claimerId', '==', currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        const claimedIds = new Set();
+        querySnapshot.forEach((doc) => {
+            claimedIds.add(doc.data().itemId);
+        });
+        userClaimedItemIds = claimedIds;
+    } catch (error) {
+        console.error("Error fetching user claims:", error);
+        userClaimedItemIds = new Set(); 
+    }
+  }
+
+  // --- CHANGE: Added cleanupListeners() to the sign-out flow ---
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    const welcome = document.getElementById('welcome-line');
+    if (user) {
+        try {
+            const userDocPromise = getDoc(doc(db, 'users', user.uid));
+            const claimsPromise = fetchUserClaims();
+            
+            const [udoc] = await Promise.all([userDocPromise, claimsPromise]);
+
+            currentUserName = (udoc.exists() && udoc.data().name) ? udoc.data().name : (user.displayName || user.email);
+            welcome.innerText = `Hello — ${currentUserName}`;
+        } catch (e) {
+            currentUserName = user.displayName || user.email;
+            welcome.innerText = `Hello — ${currentUserName}`;
+            await fetchUserClaims();
+        }
+        setHeaderAuthVisible(true);
+        renderDashboard(); 
+    } else {
+        // User is signed out, clean up all state
+        cleanupListeners(); // This is the fix
+        userClaimedItemIds = new Set();
+        welcome.innerText = 'Welcome to CampusFind';
+        setHeaderAuthVisible(false);
+        renderLandingPage();
+    }
+  });
+
+
+  document.body.addEventListener('click', async (ev) => {
+    const a = ev.target.closest('[data-action]');
+    if (!a) return;
+    ev.preventDefault();
+    const act = a.dataset.action;
+
+    if (act === 'get-started') return renderAuth('signup');
+    if (act === 'dashboard') return renderDashboard();
+    if (act === 'signout') {
+      try { await signOut(auth); showNotification('Signed out','info'); } catch(err){ showNotification('Sign out failed: '+err.message,'error'); }
+      return;
+    }
+    if (act === 'report-lost') return renderReportLostForm();
+    if (act === 'report-found') return renderReportFoundForm();
+    if (act === 'my-reports') return renderMyReports();
+    if (act === 'manage-account') return openManageAccount();
+    if (act === 'view-notifications') return renderNotifications();
+    if (act === 'signout-all') return handleSignOutAll();
+    if (act === 'open-privacy') return openModal('privacy');
+    if (act === 'open-terms') return openModal('terms');
+  });
+
+  document.body.addEventListener('click', (ev) => {
+    const claimBtn = ev.target.closest('.btn-claim');
+    if (claimBtn) { claimFoundItem(claimBtn.dataset.id); return; }
+    const ifoundBtn = ev.target.closest('.btn-i-found');
+    if (ifoundBtn) { markFoundAgainstLost(ifoundBtn.dataset.id); return; }
+    const detailsBtn = ev.target.closest('.btn-toggle-details');
+    if (detailsBtn) { toggleItemDetails(detailsBtn.dataset.id); return; }
+    const deleteBtn = ev.target.closest('.btn-delete-item');
+    if (deleteBtn) { confirmDeleteItem(deleteBtn.dataset.id, deleteBtn.dataset.name); return; }
+  });
+
+  function toggleItemDetails(itemId) {
+    const detailsDiv = document.getElementById(`details-${itemId}`);
+    const btn = document.querySelector(`.btn-toggle-details[data-id="${itemId}"]`);
+    if (!detailsDiv || !btn) return;
+    
+    if (detailsDiv.classList.contains('open')) {
+      detailsDiv.classList.remove('open');
+      btn.textContent = 'Details ▼';
+    } else {
+      detailsDiv.classList.add('open');
+      btn.textContent = 'Details ▲';
+    }
+  }
+
+  function confirmDeleteItem(itemId, itemName) {
+    const modalRoot = document.getElementById('modal-root');
+    if (!modalRoot) return;
+
+    modalRoot.innerHTML = `
+      <div class="modal-overlay" id="delete-modal">
+        <div class="modal-content">
+          <div class="text-center mb-6">
+            <div class="text-6xl mb-4">⚠️</div>
+            <h3 class="text-2xl font-bold text-red-400 mb-2">Delete Item?</h3>
+            <p class="text-gray-300 mb-2">Are you sure you want to delete:</p>
+            <p class="font-bold text-lg text-white mb-4">"${escapeHtml(itemName)}"</p>
+            <p class="text-sm text-gray-400">This action cannot be undone. The item will be permanently removed from the system.</p>
+          </div>
+          
+          <div class="flex gap-3 justify-center">
+            <button id="confirm-delete-btn" class="px-6 py-3 btn-delete text-white rounded-lg font-semibold flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Yes, Delete
+            </button>
+            <button id="cancel-delete-btn" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('confirm-delete-btn').onclick = () => {
+      deleteItem(itemId);
+      modalRoot.innerHTML = '';
+    };
+
+    document.getElementById('cancel-delete-btn').onclick = () => {
+      modalRoot.innerHTML = '';
+    };
+
+    document.getElementById('delete-modal').onclick = (e) => {
+      if (e.target.id === 'delete-modal') {
+        modalRoot.innerHTML = '';
+      }
+    };
+  }
+
+  async function deleteItem(itemId) {
+    if (!currentUser) {
+      showNotification('Please sign in to delete items', 'error');
+      return;
+    }
+
+    try {
+      const itemRef = doc(db, 'items', itemId);
+      const itemSnap = await getDoc(itemRef);
+
+      if (!itemSnap.exists()) {
+        showNotification('Item not found', 'error');
+        return;
+      }
+
+      const itemData = itemSnap.data();
+
+      if (itemData.reporterId !== currentUser.uid) {
+        showNotification('You can only delete your own reports', 'error');
+        return;
+      }
+
+      await deleteDoc(itemRef);
+      
+      showNotification('Item deleted successfully', 'success');
+      
+      renderMyReports();
+    } catch (err) {
+      console.error('Delete error:', err);
+      showNotification('Failed to delete item: ' + err.message, 'error');
+    }
+  }
+
+async function renderNotifications() {
+  if (!currentUser) return showNotification('Please sign in', 'error');
+
+  const main = document.getElementById('main-content');
+  main.innerHTML = `
+    <div class="max-w-4xl mx-auto appear">
+      <h2 class="text-2xl font-bold mb-4">🔔 Smart Match Notifications</h2>
+      <p class="muted small mb-6">Items that might match your reports - Click to see full details</p>
+      <div id="notifications-list">
+        <p class="muted">Loading notifications...</p>
+      </div>
+      <div class="mt-6">
+        <button class="px-4 py-2 bg-indigo-600 rounded-lg" data-action="dashboard">← Back to Dashboard</button>
+      </div>
+    </div>
+  `;
+
+  try {
+    const q = query(
+      collection(db, 'notifications'),
+      where('recipientId', '==', currentUser.uid),
+      orderBy('timestamp', 'desc')
+    );
+
+    listeners.notifications = onSnapshot(q, async (snapshot) => {
+      const notifsList = document.getElementById('notifications-list');
+      if (!notifsList) return;
+
+      if (snapshot.empty) {
+        notifsList.innerHTML = `
+          <div class="text-center py-8">
+            <p class="text-4xl mb-4">📭</p>
+            <p class="muted">No notifications yet</p>
+            <p class="text-sm muted mt-2">When someone reports an item that matches yours, you'll see it here!</p>
+          </div>
+        `;
+        return;
+      }
+
+      notifsList.innerHTML = `
+        <div class="text-center py-4">
+          <p class="muted">Loading ${snapshot.size} notification(s)...</p>
+        </div>
+      `;
+
+      const batch = [];
+      const notificationCards = [];
+
+      for (const docSnap of snapshot.docs) {
+        const notif = docSnap.data();
+        const notifId = docSnap.id;
+
+        if (!notif.read) {
+          batch.push(updateDoc(doc(db, 'notifications', notifId), { read: true }));
+        }
+
+        let matchedItemHtml = '<p class="text-gray-400 text-sm">Loading matched item...</p>';
+        let originalItemHtml = '<p class="text-gray-400 text-sm">Loading your report...</p>';
+
+        if (notif.matchedItemId) {
+          try {
+            const itemDoc = await getDoc(doc(db, 'items', notif.matchedItemId));
+            if (itemDoc.exists()) {
+              const item = itemDoc.data();
+              const isMine = currentUser.uid === item.reporterId;
+              const isReturned = item.status === 'returned';
+              
+              let imageHtml = '';
+              if (item.imageUrl) {
+                  imageHtml = `<img src="${escapeHtml(item.imageUrl)}" alt="Item image" class="image-preview mb-2" />`;
+              }
+
+              let buttonsHtml = '';
+              if (!isMine) {
+                 if (item.type === 'found') {
+                    if (userClaimedItemIds.has(notif.matchedItemId)) {
+                        buttonsHtml = `<div class="mt-3 p-2 bg-green-900/50 rounded text-center"><span class="text-sm text-green-300 font-bold">Claimed</span></div>`;
+                    } else {
+                        buttonsHtml = `<button class="px-4 py-2 rounded-lg text-sm font-semibold btn-claim bg-indigo-600 hover:bg-indigo-700 mt-3 w-full" data-id="${escapeHtml(notif.matchedItemId)}">✅ This is Mine - Claim It!</button>`;
+                    }
+                } else if (item.type === 'lost' && !isReturned) {
+                  buttonsHtml = `<button class="px-4 py-2 rounded-lg text-sm font-semibold btn-i-found bg-green-600 hover:bg-green-700 mt-3 w-full" data-id="${escapeHtml(notif.matchedItemId)}">✅ I Found This Item!</button>`;
+                } else {
+                  buttonsHtml = `<div class="mt-3 p-2 bg-gray-700/50 rounded text-center"><span class="text-sm muted">✓ Item Resolved</span></div>`;
+                }
+              } else {
+                buttonsHtml = `<div class="mt-3 p-2 bg-blue-700/30 rounded text-center"><span class="text-sm text-blue-400">👤 This is Your Report</span></div>`;
+              }
+
+              const badge = item.type === 'found'
+                ? '<span class="badge badge-found">🟢 Found</span>'
+                : '<span class="badge badge-lost">🔴 Lost</span>';
+              const dateText = item.date || (item.timestamp?.toDate ? item.timestamp.toDate().toLocaleDateString() : 'Unknown');
+
+              matchedItemHtml = `
+                <div class="bg-gradient-to-br from-blue-900/40 to-purple-900/30 p-5 rounded-lg mt-3 border-2 border-blue-600/50 shadow-xl">
+                  <div class="flex items-center gap-2 mb-4">
+                    <span class="text-3xl">🎯</span>
+                    <div class="flex-1">
+                      <h4 class="font-bold text-xl text-blue-200">Matched Item Found!</h4>
+                      <p class="text-xs text-blue-300 mt-1">Someone reported this item</p>
+                    </div>
+                    ${badge}
+                  </div>
+                  ${imageHtml}
+                  <div class="space-y-3 bg-black/30 p-4 rounded-lg border border-blue-500/20">
+                    <div>
+                      <p class="text-xs text-blue-300 uppercase tracking-wide mb-1">Item Name</p>
+                      <p class="font-bold text-white text-xl">${escapeHtml(item.name || 'Unnamed Item')}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-blue-300 uppercase tracking-wide mb-1">Description</p>
+                      <p class="text-gray-200 leading-relaxed">${escapeHtml(item.description || 'No description provided')}</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-blue-500/20">
+                      <div>
+                        <p class="text-xs text-blue-300 uppercase tracking-wide mb-1">📅 Date</p>
+                        <p class="font-semibold text-white">${escapeHtml(dateText)}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-blue-300 uppercase tracking-wide mb-1">📍 Location</p>
+                        <p class="font-semibold text-white">${escapeHtml(item.location || 'Not specified')}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-blue-300 uppercase tracking-wide mb-1">📞 Contact</p>
+                        <p class="font-semibold text-white break-all">${escapeHtml(item.contactDetails || 'N/A')}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-blue-300 uppercase tracking-wide mb-1">👤 Reporter</p>
+                        <p class="font-semibold text-white">${escapeHtml(item.reporterName || 'Unknown')}</p>
+                      </div>
+                      <div class="md:col-span-2">
+                        <p class="text-xs text-blue-300 uppercase tracking-wide mb-1">📧 Email</p>
+                        <p class="font-semibold text-white break-all">${escapeHtml(item.reporterEmail || 'N/A')}</p>
+                      </div>
+                    </div>
+                  </div>
+                  ${buttonsHtml}
+                </div>
+              `;
+            } else {
+              matchedItemHtml = `<div class="bg-red-900/20 border border-red-600 p-3 rounded mt-3"><p class="text-red-400 text-sm">⚠️ Matched item no longer available</p></div>`;
+            }
+          } catch (err) {
+            console.error('Error fetching matched item:', err);
+            matchedItemHtml = `<div class="bg-red-900/20 border border-red-600 p-3 rounded mt-3"><p class="text-red-400 text-sm">⚠️ Error loading matched item: ${err.message}</p></div>`;
+          }
+        }
+
+        if (notif.reportedItemId) {
+          try {
+            const reportedDoc = await getDoc(doc(db, 'items', notif.reportedItemId));
+            if (reportedDoc.exists()) {
+              const reported = reportedDoc.data();
+              const reportedBadge = reported.type === 'found'
+                ? '<span class="badge badge-found">🟢 Found</span>'
+                : '<span class="badge badge-lost">🔴 Lost</span>';
+              const reportedDate = reported.date || (reported.timestamp?.toDate ? reported.timestamp.toDate().toLocaleDateString() : 'Unknown');
+              
+              let reportedImageHtml = '';
+              if (reported.imageUrl) {
+                reportedImageHtml = `<img src="${escapeHtml(reported.imageUrl)}" alt="Your item" class="image-preview mb-2" />`;
+              }
+
+              originalItemHtml = `
+                <div class="bg-gray-800/60 p-5 rounded-lg mt-3 border border-gray-600">
+                  <div class="flex items-center gap-2 mb-4">
+                    <span class="text-3xl">📋</span>
+                    <div class="flex-1">
+                      <h4 class="font-bold text-xl text-gray-200">Your Original Report</h4>
+                      <p class="text-xs text-gray-400 mt-1">The item you reported</p>
+                    </div>
+                    ${reportedBadge}
+                  </div>
+                  ${reportedImageHtml}
+                  <div class="space-y-3 bg-black/30 p-4 rounded-lg">
+                    <div>
+                      <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Description</p>
+                      <p class="text-gray-300 leading-relaxed">${escapeHtml(reported.description || 'No description provided')}</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-gray-600">
+                      <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">📅 Date</p>
+                        <p class="font-semibold text-gray-200">${escapeHtml(reportedDate)}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">📍 Location</p>
+                        <p class="font-semibold text-gray-200">${escapeHtml(reported.location || 'Not specified')}</p>
+                      </div>
+                      <div class="md:col-span-2">
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">📞 Contact</p>
+                        <p class="font-semibold text-gray-200 break-all">${escapeHtml(reported.contactDetails || 'N/A')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            } else {
+              originalItemHtml = `<div class="bg-yellow-900/20 border border-yellow-600 p-3 rounded mt-3"><p class="text-yellow-300 text-sm">⚠️ Your original report is no longer available</p></div>`;
+            }
+          } catch (err) {
+            console.error('Error fetching reported item:', err);
+            originalItemHtml = `<div class="bg-red-900/20 border border-red-600 p-3 rounded mt-3"><p class="text-red-400 text-sm">⚠️ Error loading your report</p></div>`;
+          }
+        }
+
+        const timeStr = notif.timestamp?.toDate ? notif.timestamp.toDate().toLocaleString() : 'Unknown time';
+        const readClass = notif.read ? 'bg-gray-900/40' : 'bg-blue-900/40 border-blue-500';
+        
+        const cardHtml = `
+          <div class="${readClass} p-6 rounded-xl border-2 border-gray-700 hover:border-indigo-500/70 transition-all shadow-2xl">
+            <div class="flex justify-between items-start mb-4">
+              <div class="flex items-center gap-3">
+                <span class="text-4xl">🔔</span>
+                <div>
+                  <h3 class="font-bold text-2xl text-white mb-1">${escapeHtml(notif.title || 'Match Found')}</h3>
+                  <span class="text-xs text-gray-400 bg-gray-800/60 px-3 py-1 rounded-full">${timeStr}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-yellow-900/30 border-l-4 border-yellow-500 p-4 rounded-lg mb-4 shadow-inner">
+              <p class="text-yellow-100 leading-relaxed font-medium">${escapeHtml(notif.message || '')}</p>
+            </div>
+            
+            <div class="flex items-center justify-center gap-3 mb-4">
+              <div class="bg-gradient-to-r from-yellow-600 to-orange-600 px-5 py-3 rounded-full shadow-lg">
+                <p class="text-base font-black text-white flex items-center gap-2">
+                  <span class="text-2xl">⭐</span>
+                  <span>Match Score: ${notif.matchScore || 'N/A'}%</span>
+                </p>
+              </div>
+            </div>
+            
+            ${originalItemHtml}
+            ${matchedItemHtml}
+            
+            <div class="mt-4 p-3 bg-indigo-900/20 border border-indigo-500/30 rounded-lg">
+              <p class="text-xs text-indigo-300 text-center">💡 <strong>Tip:</strong> Contact the reporter via email or phone to arrange pickup/return</p>
+            </div>
+          </div>
+        `;
+        
+        notificationCards.push(cardHtml);
+      }
+
+      notifsList.innerHTML = `<div class="space-y-6">${notificationCards.join('')}</div>`;
+
+      if (batch.length > 0) {
+        await Promise.all(batch).catch((e) => console.error('Error marking read:', e));
+      }
+    });
+  } catch (err) {
+    console.error('Error loading notifications:', err);
+    const notifsList = document.getElementById('notifications-list');
+    if (notifsList) {
+      notifsList.innerHTML = `
+        <div class="bg-red-900/20 border-2 border-red-700 p-6 rounded-lg">
+          <p class="text-red-400 font-semibold mb-2">⚠️ Could not load notifications</p>
+          <p class="text-sm text-gray-400">${err.message}</p>
+          <p class="text-xs text-gray-500 mt-3">Make sure Firestore security rules allow reading notifications for your user ID.</p>
+        </div>
+      `;
+    }
+  }
+}
+
+
+  function openManageAccount(){
+    if(!currentUser) return showNotification('Please sign in','error');
+    document.getElementById('main-content').innerHTML = `
+      <div class="max-w-lg mx-auto appear">
+        <div class="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+          <h2 class="text-2xl font-bold mb-4">Manage your account</h2>
+          <div class="space-y-3 mb-6">
+            <div class="bg-gray-800/40 p-4 rounded-lg">
+              <p class="muted small">Name</p>
+              <p class="font-semibold text-lg">${escapeHtml(currentUserName)}</p>
+            </div>
+            <div class="bg-gray-800/40 p-4 rounded-lg">
+              <p class="muted small">Email</p>
+              <p class="font-semibold">${escapeHtml(currentUser.email)}</p>
+            </div>
+          </div>
+          <div class="flex gap-3 flex-wrap">
+            <button id="change-name" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">✏️ Edit name</button>
+            <button id="change-password" class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black rounded-lg transition-colors">🔒 Change password</button>
+            <button data-action="dashboard" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">← Back</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('change-name').onclick = async () => {
+      const newName = prompt('Enter new display name:', currentUserName);
+      if(!newName || newName.trim() === '') return;
+      try {
+        await updateProfile(auth.currentUser, { displayName: newName.trim() });
+        await setDoc(doc(db,'users',auth.currentUser.uid), { name: newName.trim(), email: currentUser.email }, { merge:true });
+        currentUserName = newName.trim();
+        showNotification('Name updated successfully!','success');
+        renderProfileArea();
+        openManageAccount();
+      } catch(err){ showNotification('Could not update name: '+err.message,'error'); }
+    };
+    document.getElementById('change-password').onclick = () => {
+      renderPasswordChange();
+    };
+  }
+
+  function renderPasswordChange(){
+    if(!currentUser) return showNotification('Please sign in','error');
+    document.getElementById('main-content').innerHTML = `
+      <div class="max-w-md mx-auto appear">
+        <div class="bg-gray-900/50 p-6 rounded-lg border border-gray-700">
+          <h2 class="text-2xl font-bold mb-4">Change Password</h2>
+          <p class="muted small mb-4">For security, you'll need to sign in again after changing your password.</p>
+          <form id="change-pwd-form" class="space-y-3">
+            <input name="newPassword" type="password" placeholder="New Password (6+ chars)" class="input-field" required>
+            <input name="confirmPassword" type="password" placeholder="Confirm New Password" class="input-field" required>
+            <div class="flex gap-3">
+              <button class="px-4 py-2 bg-yellow-400 text-black rounded-lg" type="submit">Update Password</button>
+              <button type="button" data-action="manage-account" class="px-4 py-2 bg-gray-700 rounded-lg">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    const form = document.getElementById('change-pwd-form');
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const newPassword = fd.get('newPassword');
+      const confirmPassword = fd.get('confirmPassword');
+
+      const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        return showNotification('Password must have 6+ chars, 1 capital, 1 number, 1 special char', 'error');
+      }
+      if (newPassword !== confirmPassword) {
+        return showNotification('Passwords do not match', 'error');
+      }
+
+      try {
+        await updatePassword(auth.currentUser, newPassword);
+        showNotification('Password changed successfully! Please sign in again.','success');
+        await signOut(auth);
+      } catch(err){
+        if(err.code === 'auth/requires-recent-login'){
+          showNotification('Please sign out and sign in again before changing password','error');
+        } else {
+          showNotification('Could not change password: '+err.message,'error');
+        }
+      }
+    };
+  }
+
+  function handleSignOutAll(){
+    try {
+      signOut(auth);
+      showNotification('Signed out from this browser. To sign out on other devices, sign out there manually.','info');
+    } catch(e){
+      showNotification('Sign out failed','error');
+    }
+  }
+
+  function openModal(which){
+    const root = document.getElementById('modal-root');
+    if(!root) return;
+    const content = which === 'privacy' ? `
+      <h3 class="text-2xl font-bold mb-4">🔒 Privacy Policy</h3>
+      <div class="space-y-3 text-sm muted">
+        <p>CampusFind collects minimal data (name, email) to operate the lost & found service.</p>
+        <p>We store item reports and messages in Firebase Firestore for functionality.</p>
+        <p><strong>We do not sell or share your data with third parties.</strong></p>
+        <p>Your contact details are only visible to users who interact with your reports.</p>
+        <p class="text-xs mt-4 text-gray-500">This is a demo application. Use at your own discretion.</p>
+      </div>
+    ` : `
+      <h3 class="text-2xl font-bold mb-4">📜 Terms & Conditions</h3>
+      <div class="space-y-3 text-sm muted">
+        <p>By using CampusFind, you agree to use it responsibly and ethically.</p>
+        <p><strong>Do not post:</strong> Illegal content, false reports, or spam.</p>
+        <p><strong>Respect privacy:</strong> Only claim items that genuinely belong to you.</p>
+        <p>CampusFind is provided "as-is" for campus lost & found purposes.</p>
+        <p>We reserve the right to remove any content that violates these terms.</p>
+        <p class="text-xs mt-4 text-gray-500">This is a demo application.</p>
+      </div>
+    `;
+    root.innerHTML = `
+      <div id="modal-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(4px);">
+        <div class="bg-gray-900/95 p-6 rounded-xl max-w-2xl mx-4 border border-gray-700 shadow-2xl">
+          ${content}
+          <div class="mt-6 text-right">
+            <button id="close-modal" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('close-modal').onclick = ()=> root.innerHTML='';
+    document.getElementById('modal-backdrop').onclick = (e)=> { if(e.target.id === 'modal-backdrop') root.innerHTML=''; };
+  }
+
+  function renderAuth(mode='login'){
+    const isSignUp = mode==='signup';
+    if (!isSignUp) {
+      document.getElementById('main-content').innerHTML = `
+        <div class="max-w-xl mx-auto appear">
+          <div class="bg-gray-900/50 p-6 rounded-lg">
+            <h2 class="text-2xl font-bold mb-4">Sign in to CampusFind</h2>
+            <form id="auth-form" class="space-y-3">
+              <input name="email" type="email" placeholder="Gmail" class="input-field" required>
+              <input name="password" type="password" placeholder="Password" class="input-field" required>
+              <div class="flex gap-3">
+                <button class="px-4 py-2 bg-yellow-400 text-black rounded-lg" type="submit">Log in</button>
+                <button type="button" id="switch-auth" class="px-4 py-2 bg-gray-700 rounded-lg">Don't have an account? Sign up</button>
+              </div>
+            </form>
+            <div class="mt-3 text-right">
+              <button id="forgot-password" class="underline text-sm muted hover:text-indigo-300">Forgot password?</button>
+            </div>
+          </div>
+        </div>
+      `;
+      const form = document.getElementById('auth-form');
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-60','cursor-not-allowed'); }
+        const fd = new FormData(form);
+        const email = (fd.get('email')||'').trim();
+        const password = fd.get('password');
+        if (!email || !password) {
+          showNotification('Please provide both email and password','error');
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-60','cursor-not-allowed'); }
+          return;
+        }
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          showNotification('Logged in','success');
+          renderDashboard();
+        } catch (err) {
+          const codePart = err?.code ? ` (${err.code})` : '';
+          showNotification('Login failed: ' + (err?.message || 'Unknown error') + codePart, 'error');
+        } finally {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-60','cursor-not-allowed'); }
+        }
+      };
+      document.getElementById('switch-auth').onclick = () => renderAuth('signup');
+      document.getElementById('forgot-password').onclick = () => renderForgotPassword();
+      return;
+    }
+
+    document.getElementById('main-content').innerHTML = `
+      <div class="max-w-xl mx-auto appear">
+        <div class="bg-gray-900/50 p-6 rounded-lg">
+          <h2 class="text-2xl font-bold mb-4">Create an account</h2>
+          <form id="signup-step1" class="space-y-3">
+            <input name="userName" placeholder="Full name" class="input-field" required>
+            <input name="email" type="email" placeholder="Gmail" class="input-field" required>
+            <div class="flex gap-3">
+              <button class="px-4 py-2 bg-yellow-400 text-black rounded-lg" type="submit">Send OTP</button>
+              <button type="button" id="switch-auth" class="px-4 py-2 bg-gray-700 rounded-lg">Have an account? Login</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    const form = document.getElementById('signup-step1');
+    form.onsubmit = async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(form);
+      const userName = (fd.get('userName')||'').trim();
+      const email = (fd.get('email')||'').trim();
+      if(!userName) return showNotification('Name required', 'error');
+      if(!email) return showNotification('Email required', 'error');
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiryMs = 5 * 60 * 1000;
+      const expiryAt = Date.now() + expiryMs;
+
+      localStorage.setItem('cf_otp_code', otp);
+      localStorage.setItem('cf_otp_email', email);
+      localStorage.setItem('cf_otp_name', userName);
+      localStorage.setItem('cf_otp_expiry', String(expiryAt));
+      localStorage.setItem('cf_otp_sent_at', String(Date.now()));
+
+      if (window.emailjs && typeof window.emailjs.send === 'function') {
+        try {
+          await sendEmailNotification({
+            name: userName,
+            to_email: email,
+            otp: otp,
+            app_name: 'CampusFind',
+            expiry: '5 minutes'
+          }, { serviceId: EMAILJS_SERVICE_ID, templateId: EMAILJS_TEMPLATE_ID, publicKey: EMAILJS_PUBLIC_KEY });
+          showNotification('OTP sent to your Gmail', 'success');
+          renderOtpVerification(email, userName);
+        } catch (err) {
+          showNotification('Could not send OTP: '+ (err?.text || err?.message || 'EmailJS error'), 'error');
+        }
+      } else {
+        showNotification('EmailJS not available — OTP shown in console for testing', 'info');
+        console.log('OTP for testing:', otp);
+        renderOtpVerification(email, userName);
+      }
+    };
+    document.getElementById('switch-auth').onclick = () => renderAuth('login');
+  }
+
+  function renderOtpVerification(email, userName) {
+    document.getElementById('main-content').innerHTML = `
+      <div class="max-w-md mx-auto appear">
+        <div class="bg-gray-900/50 p-6 rounded-lg">
+          <h2 class="text-2xl font-bold mb-2">Verify your email</h2>
+          <p class="muted small mb-4">An OTP was sent to <span class="font-semibold">${escapeHtml(email)}</span>. Enter it below (expires in 5 minutes).</p>
+          <form id="otp-form" class="space-y-3">
+            <input name="otp" placeholder="Enter 6-digit OTP" class="input-field" required>
+            <div class="flex gap-3">
+              <button class="px-4 py-2 bg-yellow-400 text-black rounded-lg" type="submit">Verify OTP</button>
+              <button type="button" id="resend-otp" class="px-4 py-2 bg-gray-700 rounded-lg">Resend OTP</button>
+            </div>
+          </form>
+          <div class="mt-3">
+            <button class="px-4 py-2 bg-indigo-600 rounded-lg" id="otp-cancel">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('otp-cancel').onclick = () => {
+      localStorage.removeItem('cf_otp_code');
+      localStorage.removeItem('cf_otp_email');
+      localStorage.removeItem('cf_otp_name');
+      localStorage.removeItem('cf_otp_expiry');
+      renderAuth('signup');
+    };
+
+    const form = document.getElementById('otp-form');
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const entered = (fd.get('otp')||'').trim();
+      verifyOtpNow(entered);
+    };
+
+    document.getElementById('resend-otp').onclick = async () => {
+      const lastSent = Number(localStorage.getItem('cf_otp_sent_at') || '0');
+      if (Date.now() - lastSent < 30*1000) {
+        showNotification('Please wait 30 seconds before resending', 'info');
+        return;
+      }
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiryAt = Date.now() + 5*60*1000;
+      localStorage.setItem('cf_otp_code', otp);
+      localStorage.setItem('cf_otp_expiry', String(expiryAt));
+      localStorage.setItem('cf_otp_sent_at', String(Date.now()));
+      try {
+        await sendEmailNotification({
+          name: userName,
+          to_email: email,
+          otp: otp,
+          app_name: 'CampusFind',
+          expiry: '5 minutes'
+        }, { serviceId: EMAILJS_SERVICE_ID, templateId: EMAILJS_TEMPLATE_ID, publicKey: EMAILJS_PUBLIC_KEY });
+        showNotification('OTP resent to your Gmail', 'success');
+      } catch (err) {
+        showNotification('Could not resend OTP', 'error');
+      }
+    };
+  }
+
+  function verifyOtpNow(enteredOtp) {
+    const savedOtp = localStorage.getItem('cf_otp_code');
+    const savedEmail = localStorage.getItem('cf_otp_email');
+    const savedName = localStorage.getItem('cf_otp_name');
+    const expiry = Number(localStorage.getItem('cf_otp_expiry') || '0');
+
+    if (!savedOtp || !savedEmail || !savedName || Date.now() > expiry) {
+      showNotification('OTP expired or not found. Please request a new OTP.', 'error');
+      renderAuth('signup');
+      return;
+    }
+
+    if (enteredOtp !== savedOtp) {
+      showNotification('Enter valid otp', 'error');
+      return;
+    }
+
+    renderPasswordCreation(savedEmail, savedName);
+  }
+
+  function renderPasswordCreation(email, userName) {
+    document.getElementById('main-content').innerHTML = `
+      <div class="max-w-md mx-auto appear">
+        <div class="bg-gray-900/50 p-6 rounded-lg">
+          <h2 class="text-2xl font-bold mb-4">Create a password</h2>
+          <p class="muted small mb-3">Enter a strong password (6+ chars, 1 uppercase, 1 number, 1 special char).</p>
+          <form id="pwd-form" class="space-y-3">
+            <input name="password" type="password" placeholder="Password" class="input-field" required>
+            <input name="confirmPassword" type="password" placeholder="Re-enter password" class="input-field" required>
+            <div class="flex gap-3">
+              <button class="px-4 py-2 bg-yellow-400 text-black rounded-lg" type="submit">Create Account</button>
+              <button type="button" class="px-4 py-2 bg-gray-700 rounded-lg" id="pwd-cancel">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('pwd-cancel').onclick = () => {
+      localStorage.removeItem('cf_otp_code');
+      localStorage.removeItem('cf_otp_email');
+      localStorage.removeItem('cf_otp_name');
+      localStorage.removeItem('cf_otp_expiry');
+      renderAuth('signup');
+    };
+
+    const form = document.getElementById('pwd-form');
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const password = fd.get('password');
+      const confirmPassword = fd.get('confirmPassword');
+
+      const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+      if (!passwordRegex.test(password)) {
+        return showNotification('Password must have 6+ chars, 1 capital, 1 number, 1 special char', 'error');
+      }
+      if (password !== confirmPassword) {
+        return showNotification('Passwords do not match', 'error');
+      }
+
+      const savedEmail = localStorage.getItem('cf_otp_email');
+      const savedName = localStorage.getItem('cf_otp_name');
+      if (!savedEmail || !savedName) {
+        return showNotification('Missing signup info. Start again.', 'error');
+      }
+
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, savedEmail, password);
+        await setDoc(doc(db,'users',userCred.user.uid), { name: savedName, email: savedEmail, createdAt: serverTimestamp() });
+        showNotification('Account created', 'success');
+
+        localStorage.removeItem('cf_otp_code');
+        localStorage.removeItem('cf_otp_email');
+        localStorage.removeItem('cf_otp_name');
+        localStorage.removeItem('cf_otp_expiry');
+      } catch (err) {
+        showNotification('Could not create account: '+err.message, 'error');
+      }
+    };
+  }
+
+  function renderForgotPassword() {
+    document.getElementById('main-content').innerHTML = `
+      <div class="max-w-md mx-auto appear">
+        <div class="bg-gray-900/50 p-6 rounded-lg">
+          <h2 class="text-2xl font-bold mb-2">Forgot Password</h2>
+          <p class="muted small mb-4">Enter your email to receive a password reset link.</p>
+          <form id="forgot-email-form" class="space-y-3">
+            <input name="email" type="email" placeholder="Enter your email" class="input-field" required>
+            <div class="flex gap-3">
+              <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg" type="submit">Send Reset Link</button>
+              <button type="button" class="px-4 py-2 bg-gray-700 rounded-lg" id="cancel-fp">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('cancel-fp').onclick = () => renderAuth('login');
+
+    document.getElementById('forgot-email-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      
+      const email = e.target.email.value.trim();
+      if (!email) {
+        showNotification('Please enter your email', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Reset Link';
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        
+        showNotification('Password reset link sent to your email!', 'success');
+        
+        document.getElementById('main-content').innerHTML = `
+          <div class="max-w-md mx-auto appear">
+            <div class="bg-gray-900/50 p-6 rounded-lg text-center">
+              <div class="text-6xl mb-4">✅</div>
+              <h2 class="text-2xl font-bold mb-3">Check Your Email</h2>
+              <p class="muted mb-4">We've sent a password reset link to:</p>
+              <p class="font-semibold text-indigo-300 mb-6">${escapeHtml(email)}</p>
+              <div class="bg-yellow-900/30 border border-yellow-600/30 rounded-lg p-4 mb-6">
+                <p class="text-sm text-yellow-200">📧 <strong>Check your inbox and spam folder</strong></p>
+                <p class="text-xs text-yellow-300 mt-2">Click the link in the email to reset your password. The link expires in 1 hour.</p>
+              </div>
+              <div class="space-y-3">
+                <button id="resend-reset-email" class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">Didn't receive? Resend Email</button>
+                <button id="back-to-login-btn" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">Back to Login</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        let canResend = true;
+        document.getElementById('resend-reset-email').onclick = async () => {
+          if (!canResend) {
+            showNotification('Please wait 30 seconds before resending', 'info');
+            return;
+          }
+
+          const resendBtn = document.getElementById('resend-reset-email');
+          resendBtn.disabled = true;
+          resendBtn.textContent = 'Sending...';
+          canResend = false;
+          
+          try {
+            await sendPasswordResetEmail(auth, email);
+            showNotification('Reset link sent again!', 'success');
+            
+            setTimeout(() => {
+              canResend = true;
+              if (resendBtn) {
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'Didn\'t receive? Resend Email';
+              }
+            }, 30000);
+            
+          } catch (err) {
+            showNotification('Could not resend: ' + err.message, 'error');
+            resendBtn.disabled = false;
+            resendBtn.textContent = 'Didn\'t receive? Resend Email';
+            canResend = true;
+          }
+        };
+
+        document.getElementById('back-to-login-btn').onclick = () => renderAuth('login');
+
+      } catch (err) {
+        console.error('Password reset error:', err);
+        let errorMsg = 'Could not send reset email';
+        
+        if (err.code === 'auth/user-not-found') {
+          showNotification('If this email exists, a reset link has been sent', 'info');
+          setTimeout(() => renderAuth('login'), 3000);
+          return;
+        } else if (err.code === 'auth/invalid-email') {
+          errorMsg = 'Invalid email address';
+        } else if (err.code === 'auth/too-many-requests') {
+          errorMsg = 'Too many attempts. Please try again in a few minutes';
+        } else if (err.message) {
+          errorMsg = err.message;
+        }
+        
+        showNotification(errorMsg, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Reset Link';
+      }
+    };
+  }
+
+
+  function renderDashboard(){
+      document.getElementById('main-content').innerHTML = `
+      <div class="space-y-6 appear">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 grid-md-3">
+          <div class="action-card" data-action="report-lost">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 9v2m0 4h.01m-6 6h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            <h3 class="text-lg font-semibold">Report Lost Item</h3>
+            <p class="muted small mt-2 text-center">Report something you lost so others can contact you.</p>
+          </div>
+          <div class="action-card" data-action="report-found">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M5 13l4 4L19 7"/></svg>
+            <h3 class="text-lg font-semibold">Report Found Item</h3>
+            <p class="muted small mt-2 text-center">Report something you found so the owner can claim it.</p>
+          </div>
+          <div class="action-card" data-action="my-reports">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <h3 class="text-lg font-semibold">My Reports</h3>
+            <p class="muted small mt-2 text-center">View items you reported or claimed.</p>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="text-xl font-bold mb-3">Recently Reported Items <span class="muted small">🔴 Lost | 🟢 Found</span></h3>
+          <div id="all-reports-list" class="space-y-3">
+            <p class="muted">Loading reports...</p>
+          </div>
+        </div>
+      </div>
+    `;
+    setupAllItemsListener();
+  }
+
+  function setupAllItemsListener(){
+    safeUnsub(listeners.all);
+    const q = query(collection(db,'items'), orderBy('timestamp','desc'), limit(50));
+    listeners.all = onSnapshot(q, (snap)=>{
+      const container = document.getElementById('all-reports-list');
+      if(!container) return;
+      if(snap.empty){ container.innerHTML = `<p class="muted">No items reported yet.</p>`; return; }
+      const html = snap.docs.map((d, idx)=>{
+        const item = d.data();
+        return renderCombinedItemCard(d.id, item, idx);
+      }).join('');
+      container.innerHTML = html;
+      Array.from(container.children).forEach((el,i)=> { el.classList.add('appear'); el.style.animationDelay = (i*40)+'ms'; });
+    }, err => { showNotification('Could not load items: '+err.message,'error'); });
+  }
+
+  // --- CHANGE: Updated the text for the claimed status
+  function renderCombinedItemCard(id, item, index = 0) {
+    const isFound = item.type === 'found';
+    const badge = isFound ? `<span class="badge badge-found">🟢 Found</span>` : `<span class="badge badge-lost">🔴 Lost</span>`;
+    const border = isFound ? 'border-green-500' : 'border-red-500';
+    const truncated = (item.description || '').length > 200 ? escapeHtml((item.description || '').slice(0, 200)) + '...' : escapeHtml(item.description || '');
+    const dateText = item.date ? escapeHtml(item.date) : (item.timestamp && item.timestamp.toDate ? escapeHtml(item.timestamp.toDate().toLocaleString()) : 'Unknown');
+    const isMine = currentUser && currentUser.uid === item.reporterId;
+    const isReturned = item.status === 'returned';
+
+    let imageHtml = '';
+    if (item.imageUrl) {
+      imageHtml = `<img src="${escapeHtml(item.imageUrl)}" alt="Item image" class="image-preview mb-2" />`;
+    }
+
+    let buttonsHtml = '';
+    if (isMine) {
+      buttonsHtml += `<div><span class="small muted">Your Report</span></div>`;
+    } else if (isFound) {
+      if (userClaimedItemIds.has(id)) {
+        // This is the updated text as per your request
+        buttonsHtml += `<div><span class="px-3 py-1 rounded-lg text-sm bg-green-900/50 text-green-300 font-bold">✅ Claimed</span></div>`;
+      } else {
+        buttonsHtml += `<div><button class="px-3 py-1 rounded-lg text-sm btn-claim bg-sky-600 hover:bg-sky-700" data-id="${escapeHtml(id)}">It's Mine</button></div>`;
+      }
+    } else { // Lost Item
+      if (isReturned) {
+        buttonsHtml += `<div><span class="small muted">Returned</span></div>`;
+      } else {
+        buttonsHtml += `<div><button class="px-3 py-1 rounded-lg text-sm btn-i-found bg-green-600 hover:bg-green-700" data-id="${escapeHtml(id)}">I Found It</button></div>`;
+      }
+    }
+
+    return `
+      <div id="${escapeHtml(id)}" class="item-card ${border}" style="animation-delay:${index*30}ms">
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-2">
+              <h4 class="text-lg font-bold">${escapeHtml(item.name||'Unnamed')}</h4>
+              ${badge}
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-1 rounded-lg text-sm bg-sky-600 hover:bg-sky-700 btn-toggle-details" data-id="${escapeHtml(id)}">Details ▼</button>
+          </div>
+        </div>
+        
+        <div id="details-${escapeHtml(id)}" class="item-details mt-3">
+          ${imageHtml}
+          <p class="muted small mb-2">${truncated}</p>
+          <p class="muted small mt-2">📅 Date: <span class="font-semibold">${dateText}</span></p>
+          <p class="muted small">📍 Location: <span class="font-semibold">${escapeHtml(item.location||'N/A')}</span></p>
+         ${item.type === 'lost' ? `
+          <div>
+            <p class="muted small">📞 Contact : <span class="font-semibold">${escapeHtml(item.contactDetails || 'N/A')}</p>
+          </div>
+        ` : ''}
+          <div class="mt-4 flex gap-2">
+            ${buttonsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function uploadImageToStorage(file, itemType) {
+    if (!currentUser) throw new Error('User not authenticated');
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('key', IMGBB_API_KEY);
+    formData.append('name', `${itemType}_${currentUser.uid}_${Date.now()}`);
+    
+    try {
+      const response = await fetch('https://api.imgbb.com/1/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.data && data.data.url) {
+        return data.data.url;
+      } else {
+        throw new Error('Invalid response from ImgBB');
+      }
+    } catch (error) {
+      console.error('ImgBB upload error:', error);
+      throw new Error('Failed to upload image: ' + error.message);
+    }
+  }
+
+  function setupImageUpload(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    const uploadArea = form.querySelector('#image-upload-area');
+    const fileInput = form.querySelector('#image-file-input');
+    const captureInput = form.querySelector('#image-capture-input');
+    const previewContainer = form.querySelector('#image-preview-container');
+    const clearBtn = form.querySelector('#clear-image-btn');
+
+    if (!uploadArea || !fileInput || !previewContainer) return;
+
+    uploadArea.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+      if (e.target.files.length > 0) {
+        handleImageFile(e.target.files[0]);
+      }
+    };
+
+    if (captureInput) {
+      captureInput.onchange = (e) => {
+        if (e.target.files.length > 0) {
+          handleImageFile(e.target.files[0]);
+        }
+      };
+    }
+
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        currentImageFile = null;
+        previewContainer.innerHTML = '';
+        fileInput.value = '';
+        if (captureInput) captureInput.value = '';
+      };
+    }
+
+    function handleImageFile(file) {
+      if (!file.type.startsWith('image/')) {
+        showNotification('Please select an image file', 'error');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('Image size should be less than 5MB', 'error');
+        return;
+      }
+
+      currentImageFile = file;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewContainer.innerHTML = `
+          <div class="mt-3">
+            <p class="small muted mb-2">Image Preview:</p>
+            <img src="${e.target.result}" class="image-preview" />
+          </div>
+        `;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function renderReportFoundForm() {
+    document.getElementById('main-content').innerHTML = `
+      <div class="max-w-2xl mx-auto appear">
+        <div class="bg-gray-900/50 p-6 rounded-lg">
+          <h2 class="text-2xl font-bold mb-4">Report Found Item</h2>
+          <form id="found-form" class="space-y-3">
+            <input class="input-field" name="itemName" placeholder="Item Name*" required>
+            <textarea class="input-field" name="description" placeholder="Description*" rows="3" required></textarea>
+            <input class="input-field" type="date" name="itemDate" placeholder="Date found">
+            <input class="input-field" name="location" placeholder="Location found (e.g., Canteen)">
+            <input class="input-field" name="contactDetails" placeholder="Contact Details (phone/email)" required>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-300">Add Image (Optional)</label>
+              <div id="image-upload-area" class="image-upload-area">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="text-sm text-gray-400">Click to upload image</p>
+                <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+              </div>
+              <input type="file" id="image-file-input" accept="image/*" class="hidden">
+              <div class="flex gap-2">
+                <button type="button" onclick="document.getElementById('image-capture-input').click()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm">📷 Capture Photo</button>
+                <button type="button" id="clear-image-btn" class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">Clear Image</button>
+              </div>
+              <input type="file" id="image-capture-input" accept="image/*" capture="environment" class="hidden">
+              <div id="image-preview-container"></div>
+            </div>
+
+            <div class="flex gap-3">
+              <button class="bg-green-500 px-4 py-2 rounded-lg" type="submit">Submit Found Item</button>
+              <button type="button" class="bg-gray-700 px-4 py-2 rounded-lg" data-action="dashboard">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    setupImageUpload('found-form');
+    
+    const form = document.getElementById('found-form');
+    form.onsubmit = async (e)=>{
+      e.preventDefault();
+      if(!currentUser) return showNotification('Please sign in','error');
+      
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      
+      const fd = new FormData(form);
+      let imageUrl = null;
+      
+      if (currentImageFile) {
+        submitBtn.textContent = 'Uploading image...';
+        try {
+          imageUrl = await uploadImageToStorage(currentImageFile, 'found');
+        } catch (err) {
+          showNotification('Image upload failed: ' + err.message, 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+          return;
+        }
+      }
+      
+      submitBtn.textContent = 'Saving...';
+      try {
+        const payload = {
+          type:'found',
+          name: fd.get('itemName'),
+          description: fd.get('description'),
+          date: fd.get('itemDate') || null,
+          location: fd.get('location') || '',
+          contactDetails: fd.get('contactDetails') || '',
+          reporterId: currentUser.uid,
+          reporterEmail: currentUser.email,
+          reporterName: currentUserName,
+          claimed:false, 
+          status:'active',
+          timestamp: serverTimestamp(),
+          imageUrl: imageUrl
+        };
+        
+        const docRef = await addDoc(collection(db,'items'), payload);
+        showNotification('Found item reported successfully!','success');
+        
+        checkForMatchAndNotify({...payload, id: docRef.id}).catch(e => console.warn('Match check failed:', e));
+        
+        currentImageFile = null;
+        renderDashboard();
+      } catch(err) { 
+        showNotification('Could not save found item: '+err.message,'error'); 
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    };
+  }
+
+  function renderReportLostForm(){
+    document.getElementById('main-content').innerHTML = `
+      <div class="max-w-2xl mx-auto appear">
+        <div class="bg-gray-900/50 p-6 rounded-lg">
+          <h2 class="text-2xl font-bold mb-4">Report Lost Item</h2>
+          <form id="lost-form" class="space-y-3">
+            <input class="input-field" name="itemName" placeholder="Item Name*" required>
+            <textarea class="input-field" name="description" placeholder="Description*" rows="3" required></textarea>
+            <input class="input-field" type="date" name="itemDate" placeholder="Date lost">
+            <input class="input-field" name="location" placeholder="Location lost (e.g., Library)">
+            <input class="input-field" name="contactDetails" placeholder="Contact Details (phone/email)" required>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-300">Add Image (Optional)</label>
+              <div id="image-upload-area" class="image-upload-area">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="text-sm text-gray-400">Click to upload image</p>
+                <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+              </div>
+              <input type="file" id="image-file-input" accept="image/*" class="hidden">
+              <div class="flex gap-2">
+                <button type="button" onclick="document.getElementById('image-capture-input').click()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm">📷 Capture Photo</button>
+                <button type="button" id="clear-image-btn" class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">Clear Image</button>
+              </div>
+              <input type="file" id="image-capture-input" accept="image/*" capture="environment" class="hidden">
+              <div id="image-preview-container"></div>
+            </div>
+
+            <div class="flex gap-3">
+              <button class="bg-yellow-400 px-4 py-2 rounded-lg text-black" type="submit">Submit Lost Item</button>
+              <button type="button" class="bg-gray-700 px-4 py-2 rounded-lg" data-action="dashboard">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    setupImageUpload('lost-form');
+    
+    const form = document.getElementById('lost-form');
+    form.onsubmit = async (e)=>{
+      e.preventDefault();
+      if(!currentUser) return showNotification('Please sign in','error');
+      
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      
+      const fd = new FormData(form);
+      let imageUrl = null;
+      
+      if (currentImageFile) {
+        submitBtn.textContent = 'Uploading image...';
+        try {
+          imageUrl = await uploadImageToStorage(currentImageFile, 'lost');
+        } catch (err) {
+          showNotification('Image upload failed: ' + err.message, 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+          return;
+        }
+      }
+      
+      submitBtn.textContent = 'Saving...';
+      try {
+        const payload = {
+          type:'lost',
+          name: fd.get('itemName'),
+          description: fd.get('description'),
+          date: fd.get('itemDate') || null,
+          location: fd.get('location') || '',
+          contactDetails: fd.get('contactDetails') || '',
+          reporterId: currentUser.uid,
+          reporterEmail: currentUser.email,
+          reporterName: currentUserName,
+          status:'active',
+          timestamp: serverTimestamp(),
+          imageUrl: imageUrl
+        };
+        
+        const docRef = await addDoc(collection(db,'items'), payload);
+        showNotification('Lost item reported successfully!','success');
+        
+        checkForMatchAndNotify({...payload, id: docRef.id}).catch(e => console.warn('Match check failed:', e));
+        
+        currentImageFile = null;
+        renderDashboard();
+      } catch(err) { 
+        showNotification('Could not save lost item: '+err.message,'error'); 
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    };
+  }
+
+
+  async function renderMyReports() {
+    if (!currentUser) return showNotification('Please sign in', 'error');
+
+    const main = document.getElementById('main-content');
+    main.innerHTML = `<p class="muted">Loading your reports...</p>`;
+
+    try {
+      // fetch items the user reported
+      const myReportsQ = query(collection(db, 'items'), where('reporterId', '==', currentUser.uid));
+      // fetch claims records (separate collection) for this user
+      const myClaimsQ = query(collection(db, 'claims'), where('claimerId', '==', currentUser.uid));
+
+      const [myReportsSnap, myClaimsSnap] = await Promise.all([
+        getDocs(myReportsQ),
+        getDocs(myClaimsQ)
+      ]);
+
+      let reportedItems = [];
+      let claimedItems = [];
+
+      // reported items are directly available
+      myReportsSnap.forEach(docSnap => {
+        reportedItems.push({ id: docSnap.id, ...docSnap.data(), role: 'Reported' });
+      });
+
+      // collect unique itemIds from claims and then fetch those item documents
+      const claimedIdsSet = new Set();
+      myClaimsSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data && data.itemId) claimedIdsSet.add(data.itemId);
+      });
+
+      if (claimedIdsSet.size > 0) {
+        const claimedFetch = Array.from(claimedIdsSet).map(id =>
+          getDoc(doc(db, 'items', id)).then(snap => snap.exists() ? { id: snap.id, ...snap.data(), role: 'Claimed' } : null)
+        );
+        const claimedResults = await Promise.all(claimedFetch);
+        claimedResults.forEach(r => { if (r) claimedItems.push(r); });
+      }
+
+      if (claimedItems.length === 0 && reportedItems.length === 0) {
+        main.innerHTML = `
+          <div class="appear text-center">
+            <h2 class="text-2xl font-bold mb-4">My Reports & Claims</h2>
+            <p class="muted">You haven't reported or claimed any items yet.</p>
+            <div class="mt-4">
+              <button class="px-4 py-2 bg-indigo-600 rounded-lg" data-action="dashboard">Back</button>
+            </div>
+          </div>`;
+        return;
+      }
+
+      claimedItems.sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
+      reportedItems.sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
+
+      let html = `
+        <div class="space-y-6 appear">
+          <h2 class="text-2xl font-bold mb-4">My Reports & Claims</h2>
+      `;
+
+       if (claimedItems.length > 0) {
+  html += `
+    <div class="rounded-lg overflow-hidden">
+     <button onclick="toggleSection('claimed-section','claimed-arrow')" class="w-full flex justify-between items-center bg-gray-800/40 px-4 py-3 text-gray-300 font-semibold">
+        <span>🟦 Claimed Items (${claimedItems.length})</span>
+        <span id="claimed-arrow">▼</span>
+      </button>
+      <div id="claimed-section" class="p-4 space-y-3 max-h-[2000px] overflow-hidden transition-all duration-300">
+  `;
+  // Change this line
+  claimedItems.forEach(it => { html += renderMyItemCardHTML(it); });
+  html += `</div></div>`;
+}
+
+if (reportedItems.length > 0) {
+  html += `
+    <div class="rounded-lg overflow-hidden">
+      <button onclick="toggleSection('reported-section','reported-arrow')" class="w-full flex justify-between items-center bg-gray-800/40 px-4 py-3 text-gray-300 font-semibold">
+        <span>⚫ Reported Items (${reportedItems.length})</span>
+        <span id="reported-arrow" style="transform: rotate(-90deg);">▶</span>
+      </button>
+      <div id="reported-section" class="p-4 space-y-3" style="max-height:0; overflow:hidden; transition: max-height .35s ease;">
+  `;
+  // Change this line
+  reportedItems.forEach(it => { html += renderMyItemCardHTML(it); });
+  html += `</div></div>`;
+}
+      html += `
+        <div class="mt-6">
+          <button class="px-4 py-2 bg-indigo-600 rounded-lg" data-action="dashboard">Back</button>
+        </div>
+      </div>
+      `;
+
+      main.innerHTML = html;
+
+      const claimedSection = document.getElementById('claimed-section');
+      const claimedArrow = document.getElementById('claimed-arrow');
+      if (claimedSection) {
+        claimedSection.style.maxHeight = claimedSection.scrollHeight + 'px';
+        if (claimedArrow) claimedArrow.style.transform = 'rotate(0deg)';
+      }
+
+    } catch (err) {
+      showNotification('Could not load reports: ' + err.message, 'error');
+    }
+  }
+
+
+  function renderMyItemCardHTML(item) {
+    const dateText = item.date ? escapeHtml(item.date) : (item.timestamp?.toDate ? escapeHtml(item.timestamp.toDate().toLocaleString()) : 'N/A');
+    const typeBadge = item.type === 'found' ? `<span class="badge badge-found">🟢 Found</span>` : `<span class="badge badge-lost">🔴 Lost</span>`;
+    
+    const roleBadge = item.role === 'Reported' 
+        ? `<span class="text-xs font-bold text-blue-300 bg-blue-900/50 px-2 py-1 rounded-full">You Reported</span>`
+        : `<span class="text-xs font-bold text-green-300 bg-green-900/50 px-2 py-1 rounded-full">You Claimed</span>`;
+
+    let imageHtml = '';
+    if (item.imageUrl) {
+        imageHtml = `<img src="${escapeHtml(item.imageUrl)}" alt="Item image" class="image-preview my-2" />`;
+    }
+
+    let deleteButtonHtml = item.role === 'Reported' ? `
+        <button class="px-3 py-1.5 btn-delete btn-delete-item rounded-lg text-sm font-semibold text-white flex items-center gap-1" data-id="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name || 'Unnamed')}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete
+        </button>
+    ` : '';
+
+    return `
+      <div class="bg-gray-800/60 border border-gray-700 hover:border-indigo-500 p-4 rounded-lg transition-all duration-200">
+        <div class="flex justify-between items-start flex-wrap gap-2">
+            <div class="flex-1">
+                <h3 class="font-semibold text-lg flex items-center flex-wrap gap-3">
+                    <span>${escapeHtml(item.name || 'Unnamed')}</span>
+                    ${typeBadge}
+                    ${roleBadge}
+                </h3>
+            </div>
+            <div class="text-right flex flex-col gap-2 items-end">
+                <p class="small muted">Status: <span class="font-semibold">${escapeHtml(item.status || 'active')}</span></p>
+                ${deleteButtonHtml}
+            </div>
+        </div>
+        ${imageHtml}
+        <p class="muted small mt-1">${escapeHtml(item.description || '')}</p>
+        <p class="muted small mt-2">📅 Date: <span class="font-semibold">${dateText}</span></p>
+        <p class="muted small">📍 Location: <span class="font-semibold">${escapeHtml(item.location || 'N/A')}</span></p>
+        <p class="muted small">📞 Contact: <span class="font-semibold">${escapeHtml(item.contactDetails || 'N/A')}</span></p>
+      </div>
+    `;
+  }
+
+  window.toggleSection = function(sectionId, arrowId) {
+    const section = document.getElementById(sectionId);
+    const arrow = document.getElementById(arrowId);
+    if (!section) return;
+    const isOpen = section.style.maxHeight && section.style.maxHeight !== '0px';
+    if (isOpen) {
+      section.style.maxHeight = '0px';
+      if (arrow) arrow.style.transform = 'rotate(-90deg)';
+    } else {
+      section.style.maxHeight = section.scrollHeight + 'px';
+      if (arrow) arrow.style.transform = 'rotate(0deg)';
+    }
+  };
+
+  async function sendEmailNotification(params, opts = {}) {
+    if (!window.emailjs || typeof window.emailjs.send !== 'function' || typeof window.emailjs.init !== 'function') {
+      console.warn('EmailJS not available for sending notification', params);
+      throw new Error('EmailJS not available');
+    }
+
+    const serviceId = opts.serviceId || EMAILJS_SERVICE_ID;
+    const templateId = opts.templateId || EMAILJS_NOTIFY_TEMPLATE_ID;
+    const publicKey = opts.publicKey || (serviceId === EMAILJS_EXTRA_SERVICE_ID ? EMAILJS_EXTRA_PUBLIC_KEY : EMAILJS_PUBLIC_KEY);
+
+    try {
+      window.emailjs.init(publicKey);
+    } catch (e) { }
+
+    try {
+      const res = await window.emailjs.send(serviceId, templateId, params);
+      return res;
+    } catch (err) {
+      if (err?.status === 400) {
+        showNotification('EmailJS returned 400 — check template/service IDs in dashboard', 'error');
+      }
+      throw err;
+    }
+  }
+
+  async function markFoundAgainstLost(lostItemId) {
+    if (!currentUser) return showNotification('Please sign in', 'error');
+    try {
+      const lostSnap = await getDoc(doc(db, 'items', lostItemId));
+      if (!lostSnap.exists()) return showNotification('Original item not found', 'error');
+      const lost = lostSnap.data();
+
+      const foundPayload = {
+        type: 'found',
+        name: lost.name || 'Found item',
+        description: lost.description || '',
+        date: lost.date || null,
+        location: lost.location || '',
+        contactDetails: currentUser.email || '',
+        reporterId: currentUser.uid,
+        reporterEmail: currentUser.email,
+        reporterName: currentUserName,
+        claimed: false,
+        status: 'active',
+        linkedLostId: lostItemId,
+        timestamp: serverTimestamp(),
+      };
+
+      await addDoc(collection(db, 'items'), foundPayload);
+
+      if (lost.reporterEmail) {
+        try {
+          await sendEmailNotification({
+            to_email: lost.reporterEmail,
+            from_name: currentUserName,
+            sender_email: currentUser.email,
+            item_name: lost.name || 'Unknown Item',
+            message: `${currentUserName} found your lost item "${lost.name}". You can contact them at ${currentUser.email}.`
+          }, { serviceId: EMAILJS_EXTRA_SERVICE_ID, templateId: EMAILJS_NOTIFY_TEMPLATE_ID, publicKey: EMAILJS_EXTRA_PUBLIC_KEY });
+          showNotification('Email sent to lost item reporter', 'success');
+        } catch (err) {
+          console.error('EmailJS send error (I Found It):', err);
+        }
+      }
+
+      showNotification('Reported a matching Found item — reporter notified.', 'success');
+      renderDashboard();
+    } catch (err) {
+      showNotification('Could not report found item: ' + err.message, 'error');
+    }
+  }
+
+async function claimFoundItem(itemId) {
+    if (!currentUser) {
+        showNotification('Please sign in to claim this item', 'error');
+        return;
+    }
+
+    try {
+        const itemRef = doc(db, 'items', itemId);
+        const itemSnap = await getDoc(itemRef);
+
+        if (!itemSnap.exists()) {
+            showNotification('Item not found', 'error');
+            return;
+        }
+        
+        const itemData = itemSnap.data();
+
+        if (userClaimedItemIds.has(itemId)) {
+            showNotification('You have already submitted a claim for this item.', 'info');
+            return;
+        }
+        
+        showClaimModal(itemId, itemData);
+
+    } catch (err) {
+        console.error(err);
+        showNotification('Error loading item: ' + err.message, 'error');
+    }
+}
+
+function showClaimModal(itemId, itemData) {
+    const modalRoot = document.getElementById('modal-root');
+    if (!modalRoot) return;
+
+    const submitButtonOriginalHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Submit Claim
+    `;
+
+    modalRoot.innerHTML = `
+      <div class="modal-overlay flex items-center justify-center p-4" id="claim-modal">
+        <div class="modal-content overflow-y-auto" style="max-width: 600px; max-height: 90vh; border-color: rgba(59,130,246,.4);">
+          
+          <div class="text-center mb-6">
+            <div class="text-6xl mb-4">✋</div>
+            <h3 class="text-2xl font-bold text-blue-400 mb-2">Claim This Item</h3>
+            <p class="text-gray-300 mb-2">Claiming: <span class="font-bold">"${escapeHtml(itemData.name || 'Unknown Item')}"</span></p>
+            <p class="text-sm text-gray-400">Please provide your contact details so the finder can reach you.</p>
+          </div>
+          
+          <form id="claim-form" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Your Full Name *</label>
+              <input type="text" name="claimerName" value="${escapeHtml(currentUserName || '')}" class="input-field" placeholder="Enter your full name" required>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Your Email *</label>
+              <input type="email" name="claimerEmail" value="${escapeHtml(currentUser.email || '')}" class="input-field" placeholder="your.email@example.com" required>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Your Phone Number *</label>
+              <input type="tel" name="claimerPhone" class="input-field" placeholder="Enter your phone number" required pattern="[0-9+\\s()-]{10,15}">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Your Aadhaar Number *</label>
+              <input type="tel" name="claimerAadharNumber" class="input-field" placeholder="Enter 12-digit Aadhaar number" required pattern="[0-9]{12}" title="Please enter a valid 12-digit Aadhaar number.">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-gray-300 mb-2">Additional Message (Optional)</label>
+              <textarea name="claimerMessage" class="input-field" rows="3" placeholder="Add any additional information that proves this item is yours..."></textarea>
+            </div>
+            
+            <div class="flex gap-3 justify-center pt-4">
+              <button type="submit" id="submit-claim-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2">
+                ${submitButtonOriginalHTML}
+              </button>
+              <button type="button" id="cancel-claim-btn" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    const form = document.getElementById('claim-form');
+    const submitBtn = document.getElementById('submit-claim-btn');
+    
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+      
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+        <svg class="animate-spin h-5 w-5 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Submitting...
+        `;
+
+        const fd = new FormData(form);
+        const claimerName = fd.get('claimerName').trim();
+        const claimerEmail = fd.get('claimerEmail').trim();
+        const claimerPhone = fd.get('claimerPhone').trim(); 
+        const claimerAadhar = fd.get('claimerAadharNumber').trim(); 
+        const claimerMessage = fd.get('claimerMessage').trim();
+      
+        if (!claimerName || !claimerEmail || !claimerPhone || !claimerAadhar) {
+            showNotification('Please fill in all required fields', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = submitButtonOriginalHTML;
+            return;
+        }
+      
+        try {
+            await addDoc(collection(db, 'claims'), {
+                itemId: itemId,
+                claimerId: currentUser.uid,
+                claimerName: claimerName,
+                claimerEmail: claimerEmail,
+                claimerPhone: claimerPhone,
+                claimerAadhar: claimerAadhar,
+                claimerMessage: claimerMessage,
+                itemOwnerId: itemData.reporterId,
+                timestamp: serverTimestamp()
+            });
+
+            let emailMessage = `
+            Hello ${itemData.reporterName || "there"},
+            Good news! Someone has submitted a claim for the item you found: "${itemData.name || 'Unknown Item'}"
+
+            CLAIMANT'S DETAILS:
+            ━━━━━━━━━━━━━━━━━━━━
+            👤 Name: ${claimerName}
+            📧 Email: ${claimerEmail}
+            📱 Phone: ${claimerPhone}
+            🪪 Aadhaar number: ${claimerAadhar}
+            `;
+            if (claimerMessage) {
+                emailMessage += `\n💬 Message from claimant:\n"${claimerMessage}"\n`;
+            }
+            emailMessage += `
+            ━━━━━━━━━━━━━━━━━━━━
+            Please contact the person using the details above to arrange the return of the item.
+            Best regards,
+            CampusFind Team
+            `;
+
+            await sendEmailNotification(
+                { 
+                    to_email: itemData.reporterEmail, 
+                    name: itemData.reporterName || "User", 
+                    item_name: itemData.name || "Unknown Item", 
+                    message: emailMessage, 
+                },
+                { 
+                    serviceId: EMAILJS_EXTRA_SERVICE_ID, 
+                    templateId: EMAILJS_NOTIFY_TEMPLATE_ID, 
+                    publicKey: EMAILJS_EXTRA_PUBLIC_KEY, 
+                }
+            );
+            
+            userClaimedItemIds.add(itemId);
+            showNotification('Claim submitted! The item finder has been notified.', 'success');
+            modalRoot.innerHTML = '';
+            renderDashboard();
+        
+        } catch (err) {
+            console.error('Claim submission error:', err);
+            showNotification('Error submitting claim: ' + err.message, 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = submitButtonOriginalHTML;
+        }
+    };
+
+    document.getElementById('cancel-claim-btn').onclick = () => {
+        modalRoot.innerHTML = '';
+    };
+
+    document.getElementById('claim-modal').onclick = (e) => {
+        if (e.target.id === 'claim-modal') {
+            modalRoot.innerHTML = '';
+        }
+    };
+}
+     
+
+
+
+  function tokenize(s) {
+    if (!s) return [];
+    return Array.from(new Set(
+      s.toString().toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean)
+    ));
+  }
+
+  function jaccard(aTokens, bTokens) {
+    if (!aTokens.length || !bTokens.length) return 0;
+    const A = new Set(aTokens);
+    const B = new Set(bTokens);
+    let inter = 0;
+    A.forEach(t => { if (B.has(t)) inter++; });
+    const uni = new Set([...A, ...B]).size || 1;
+    return inter / uni;
+  }
+
+  function computeMatchScore(a, b) {
+    const nameSim = jaccard(tokenize(a.name || ''), tokenize(b.name || ''));
+    const descSim = jaccard(tokenize(a.description || ''), tokenize(b.description || ''));
+    const locSim  = jaccard(tokenize(a.location || ''), tokenize(b.location || ''));
+    const score = Math.round((nameSim * 0.6 + descSim * 0.25 + locSim * 0.15) * 100);
+    return score;
+  }
+
+  async function checkForMatchAndNotify(newPayload) {
+    try {
+      const oppositeType = newPayload.type === 'found' ? 'lost' : 'found';
+      const q = query(collection(db,'items'), where('type','==', oppositeType));
+      const snaps = await getDocs(q);
+      if (snaps.empty) return;
+
+      const candidates = [];
+      snaps.forEach(snap => {
+        const data = snap.data();
+        candidates.push({ id: snap.id, ...data });
+      });
+
+      const matches = [];
+      for (const c of candidates) {
+        if (!c) continue;
+        if (c.reporterId && newPayload.reporterId && c.reporterId === newPayload.reporterId) continue;
+        if (c.status && c.status !== 'active') continue;
+        
+        const score = computeMatchScore(newPayload, c);
+        if (score >= 35) {
+          matches.push({ id: c.id, doc: c, score });
+        }
+      }
+
+      matches.sort((a,b) => b.score - a.score);
+
+      for (const m of matches.slice(0,5)) {
+        try {
+          const notificationsRef = collection(db, 'notifications');
+          await addDoc(notificationsRef, {
+            recipientId: m.doc.reporterId,
+            recipientEmail: m.doc.reporterEmail,
+            reportedItemId: m.id,
+            matchedItemId: newPayload.id,
+            title: `Possible Match Found! (${m.score}%)`,
+            message: `A ${newPayload.type} item "${newPayload.name}" matches your ${m.doc.type} item "${m.doc.name}". Contact: ${newPayload.reporterEmail}`,
+            matchScore: m.score,
+            read: false,
+            timestamp: serverTimestamp()
+          });
+
+          await addDoc(notificationsRef, {
+            recipientId: newPayload.reporterId,
+            recipientEmail: newPayload.reporterEmail,
+            reportedItemId: newPayload.id,
+            matchedItemId: m.id,
+            title: `Possible Match Found! (${m.score}%)`,
+            message: `We found a ${m.doc.type} item "${m.doc.name}" that matches your ${newPayload.type} report "${newPayload.name}". Contact: ${m.doc.reporterEmail}`,
+            matchScore: m.score,
+            read: false,
+            timestamp: serverTimestamp()
+          });
+
+          if (newPayload.type === 'found') {
+            if (m.doc.reporterEmail) {
+              await sendEmailNotification({
+                to_email: m.doc.reporterEmail,
+                from_name: newPayload.reporterName,
+                sender_email: newPayload.reporterEmail || '',
+                item_name: newPayload.name,
+                message: `${newPayload.reporterName} reported found item which matches your lost item "${m.doc.name}". You can reach them at ${newPayload.reporterEmail || 'the reporter'}.`
+              }, { serviceId: EMAILJS_SERVICE_ID, templateId: EMAILJS_MATCH_TEMPLATE_ID });
+            }
+          } else {
+            if (m.doc.reporterEmail) {
+              await sendEmailNotification({
+                to_email: m.doc.reporterEmail,
+                from_name: newPayload.reporterName,
+                sender_email: newPayload.reporterEmail || '',
+                item_name: newPayload.name,
+                message: `${newPayload.reporterName} reported lost  item that may match your found item "${m.doc.name}". You can reach them at ${newPayload.reporterEmail || 'the reporter'}.`
+              }, { serviceId: EMAILJS_SERVICE_ID, templateId: EMAILJS_MATCH_TEMPLATE_ID });
+            }
+          }
+        } catch (e) {
+          console.warn('Could not send match notification', e);
+        }
+      }
+    } catch (err) {
+      console.error('checkForMatchAndNotify failed', err);
+    }
+  }
+
+  renderLandingPage();
+
+</script>
+</body>
+</html>
